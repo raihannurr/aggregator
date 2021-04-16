@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <title>Product Search</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <!-- <link rel="stylesheet" href="/static/style.css" /> -->
+  <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>
+</head>
+<body>
+
+<div class="jumbotron text-center">
+  <h1>Product Search</h1>
+</div>
+  
+<div class="container">
+    <div class="row">
+        <div class="form-group">
+            <label for="limit">Limit:</label>
+            <input type="text" class="form-control" id="limit" value="10">
+            <label for="offset">Offset:</label>
+            <input type="text" class="form-control" id="offset" value="0">
+            <label for="srch">Product Search:</label>
+            <input type="text" class="form-control" id="srch">
+        </div>
+    </div>  
+  
+    <div class="row">
+    <div class="col-sm-6">
+        <img class="rounded" style="height: 60px" src="https://ecs7.tokopedia.net/assets-tokopedia-lite/v2/zeus/production/e5b8438b.svg">
+        <br>
+        <br>
+        <p id="tokped-items">No Result</p>
+    </div>
+    <div class="col-sm-6">
+        <img class="rounded" style="height: 80px" src="https://deo.shopeemobile.com/shopee/shopee-mobilemall-live-sg/assets/d010b985fc1475e559b6db819889703c.png">
+        <br>
+        <br>
+        <p id="shopee-items">No Result</p>
+    </div>
+  </div>
+</div>
+
+<script>
+    var keyword = ""
+    var limit = 5
+    var offsetTokped = 0
+    var offsetShopee = 0
+    var countShopee = 0
+    var countTokped = 0
+    var pageTokped = 0
+    var pageShopee = 0
+
+    var srch = document.getElementById("srch");
+    var offst = document.getElementById("offset");
+    var lmt = document.getElementById("limit");
+
+    srch.addEventListener("keyup", function(event) {
+      if (event.keyCode === 13) {
+       event.preventDefault();
+
+       keyword = srch.value
+       limit = lmt.value
+       offsetShopee = offst.value
+       offsetTokped = offst.value
+
+       searchShopee()
+       searchTokped()
+      }
+    });
+
+    async function searchTokped() {
+        var url = new URL('http://localhost:8000/tokped')
+        var params = {keyword:keyword, limit: limit, offset: offsetShopee}
+
+        url.search = new URLSearchParams(params).toString();
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            countTokped = data.meta.total
+            pageTokped = Math.ceil(countTokped/limit)
+
+            list = document.getElementById('tokped-items');
+            list.innerHTML = ""
+
+            data.data.forEach(element => {
+                var itemDiv = document.createElement("div");
+                var content = `
+                    <div class="card" style="width: 18rem;">
+                        <img class="card-img-top" src="${element.Image}" alt="Card image cap">
+                        <div class="card-body">
+                        <h5 class="card-title">${element.Name}</h5>
+                        <p class="card-text">Rp ${numberWithCommas(element.Price)}</p>
+                        <a href="${element.URL}" class="btn btn-primary">Product Link</a>
+                        </div>
+                    </div>`
+                itemDiv.innerHTML = content
+                list.appendChild(itemDiv)
+            });
+        });
+    }
+
+    async function searchShopee() {
+        var url = new URL('http://localhost:8000/shopee')
+        var params = {keyword:keyword, limit: limit, offset: offsetShopee}
+
+        url.search = new URLSearchParams(params).toString();
+        fetch(url)
+        .then(response => response.json())
+        .then(data => {
+            countShopee = data.meta.total
+            pageShopee = Math.ceil(countShopee/limit)
+
+            list = document.getElementById('shopee-items');
+            list.innerHTML = ""
+
+            data.data.forEach(element => {
+                var itemDiv = document.createElement("div");
+                var content = `
+                    <div class="card" style="width: 18rem;">
+                        <img class="card-img-top" src="${element.Image}" alt="Card image cap">
+                        <div class="card-body">
+                        <h5 class="card-title">${element.Name}</h5>
+                        <p class="card-text">Rp ${numberWithCommas(element.Price)}</p>
+                        <a href="${element.URL}" class="btn btn-primary">Product Link</a>
+                        </div>
+                    </div>`
+                itemDiv.innerHTML = content
+                list.appendChild(itemDiv)
+            });
+        });
+    }
+
+    function numberWithCommas(x) {
+        return x.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+    }
+
+</script>
+
+</body>
+</html>
